@@ -52,4 +52,4 @@ if st.button("Calculate Wash Time"):
     washing_sim.compute()
     
     result = washing_sim.output['time']
-    st.success(f"Calculated Wash Time: {result:.1f} minutes")g
+    st.success(f"Calculated Wash Time: {result:.1f} minutes")
