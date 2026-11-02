@@ -1,0 +1,50 @@
+<style>
+/* 1. تصميم الصندوق الخارجي للغسالة */
+.washer-card {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    margin-bottom: 25px;
+}
+
+/* 2. الحركة الاهتزازية والدائرية لعملية الغسيل */
+@keyframes wash-cycle {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(8deg) scale(1.03); }
+    50% { transform: rotate(-8deg) scale(0.98); }
+    75% { transform: rotate(5deg) scale(1.02); }
+    100% { transform: rotate(0deg) scale(1); }
+}
+
+/* 3. تطبيق الحركة على صورة الغسالة */
+.animated-washer-img {
+    width: 140px;
+    height: 140px;
+    margin-top: 15px;
+    animation: wash-cycle 1.2s infinite ease-in-out;
+    filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.3));
+}
+
+/* 4. عنوان النص وصفاته */
+.washer-title {
+    font-size: 26px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #ffffff;
+}
+
+.washer-subtitle {
+    font-size: 14px;
+    color: #dcdde1;
+}
+</style>
+
+<div class="washer-card">
+    <div class="washer-title">🧺 Smart Washing Machine Simulator</div>
+    <div class="washer-subtitle">Mamdani Fuzzy Logic Inference System (27 Rules)</div>
+    <!-- رابط صورة غسالة ذات جودة عالية شفافة -->
+    <img class="animated-washer-img" src="https://cdn-icons-png.flaticon.com/512/872/872221.png" alt="Washing Machine">
+</div>
