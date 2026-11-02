@@ -2,115 +2,13 @@ import streamlit as st
 import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
-import time
-import plotly.graph_objects as go
-import pandas as pd
-
-# ==========================================
-# 1. إعداد المتغيرات ودوال العضوية (مطابق للملزمة)
-# ==========================================
-dirtiness = ctrl.Antecedent(np.arange(0, 101, 1), "dirtiness")
-grease = ctrl.Antecedent(np.arange(0, 101, 1), "grease")
-load = ctrl.Antecedent(np.arange(0, 10.1, 0.1), "load")
-
-wash_time = ctrl.Consequent(np.arange(0, 61, 1), "wash_time")
-water_temp = ctrl.Consequent(np.arange(0, 101, 1), "water_temp")
-
-dirtiness["low"] = fuzz.trimf(dirtiness.universe, [0, 0, 50])
-dirtiness["medium"] = fuzz.trimf(dirtiness.universe, [25, 50, 75])
-dirtiness["high"] = fuzz.trimf(dirtiness.universe, [50, 100, 100])
-
-grease["low"] = fuzz.trimf(grease.universe, [0, 0, 50])
-grease["medium"] = fuzz.trimf(grease.universe, [25, 50, 75])
-grease["high"] = fuzz.trimf(grease.universe, [50, 100, 100])
-
-load["light"] = fuzz.trimf(load.universe, [0, 0, 5])
-load["medium"] = fuzz.trimf(load.universe, [2, 5, 8])
-load["heavy"] = fuzz.trimf(load.universe, [5, 10, 10])
-
-wash_time["short"] = fuzz.trimf(wash_time.universe, [0, 0, 30])
-wash_time["normal"] = fuzz.trimf(wash_time.universe, [15, 30, 45])
-wash_time["long"] = fuzz.trimf(wash_time.universe, [30, 60, 60])
-
-water_temp["cold"] = fuzz.trimf(water_temp.universe, [0, 0, 40])
-water_temp["warm"] = fuzz.trimf(water_temp.universe, [30, 50, 70])
-water_temp["hot"] = fuzz.trimf(water_temp.universe, [60, 100, 100])
-
-# ==========================================
-# 2. مصفوفة القواعد الـ 27
-# ==========================================
-rules = [
-    ctrl.Rule(dirtiness['low'] & grease['low'] & load['light'], [wash_time['short'], water_temp['cold']]),
-    ctrl.Rule(dirtiness['low'] & grease['medium'] & load['light'], [wash_time['short'], water_temp['warm']]),
-    ctrl.Rule(dirtiness['low'] & grease['high'] & load['light'], [wash_time['normal'], water_temp['warm']]),
-    ctrl.Rule(dirtiness['medium'] & grease['low'] & load['light'], [wash_time['short'], water_temp['warm']]),
-    ctrl.Rule(dirtiness['medium'] & grease['medium'] & load['light'], [wash_time['normal'], water_temp['warm']]),
-    ctrl.Rule(dirtiness['medium'] & grease['high'] & load['light'], [wash_time['long'], water_temp['hot']]),
-    ctrl.Rule(dirtiness['high'] & grease['low'] & load['light'], [wash_time['normal'], water_temp['warm']]),
-    ctrl.Rule(dirtiness['high'] & grease['medium'] & load['light'], [wash_time['long'], water_temp['hot']]),
-    ctrl.Rule(dirtiness['high'] & grease['high'] & load['light'], [wash_time['long'], water_temp['hot']]),
-
-    ctrl.Rule(dirtiness['low'] & grease['low'] & load['medium'], [wash_time['short'], water_temp['cold']]),
-    ctrl.Rule(dirtiness['low'] & grease['medium'] & load['medium'], [wash_time['normal'], water_temp['warm']]),
-    ctrl.Rule(dirtiness['low'] & grease['high'] & load['medium'], [wash_time['long'], water_temp['warm']]),
-    ctrl.Rule(dirtiness['medium'] & grease['low'] & load['medium'], [wash_time['normal'], water_temp['warm']]),
-    ctrl.Rule(dirtiness['medium'] & grease['medium'] & load['medium'], [wash_time['normal'], water_temp['warm']]),
-    ctrl.Rule(dirtiness['medium'] & grease['high'] & load['medium'], [wash_time['long'], water_temp['hot']]),
-    ctrl.Rule(dirtiness['high'] & grease['low'] & load['medium'], [wash_time['long'], water_temp['warm']]),
-    ctrl.Rule(dirtiness['high'] & grease['medium'] & load['medium'], [wash_time['long'], water_temp['hot']]),
-    ctrl.Rule(dirtiness['high'] & grease['high'] & load['medium'], [wash_time['long'], water_temp['hot']]),
-
-    ctrl.Rule(dirtiness['low'] & grease['low'] & load['heavy'], [wash_time['normal'], water_temp['cold']]),
-    ctrl.Rule(dirtiness['low'] & grease['medium'] & load['heavy'], [wash_time['long'], water_temp['warm']]),
-    ctrl.Rule(dirtiness['low'] & grease['high'] & load['heavy'], [wash_time['long'], water_temp['hot']]),
-    ctrl.Rule(dirtiness['medium'] & grease['low'] & load['heavy'], [wash_time['long'], water_temp['warm']]),
-    ctrl.Rule(dirtiness['medium'] & grease['medium'] & load['heavy'], [wash_time['long'], water_temp['hot']]),
-    ctrl.Rule(dirtiness['medium'] & grease['high'] & load['heavy'], [wash_time['long'], water_temp['hot']]),
-    ctrl.Rule(dirtiness['high'] & grease['low'] & load['heavy'], [wash_time['long'], water_temp['hot']]),
-    ctrl.Rule(dirtiness['high'] & grease['medium'] & load['heavy'], [wash_time['long'], water_temp['hot']]),
-    ctrl.Rule(dirtiness['high'] & grease['high'] & load['heavy'], [wash_time['long'], water_temp['hot']])
-]
-
-washer_ctrl = ctrl.ControlSystem(rules)
-
-# ==========================================
-# 3. واجهة المستخدم
-# ==========================================
-try:
-    with open("design.html", "r", encoding="utf-8") as f:
-        st.markdown(f.read(), unsafe_allow_html=True)
-except FileNotFoundError:
-    pass
-
-col1, col2, col3 = st.columns(3)
-with col1:
-    dلجعل المشروع "مثالياً" واحترافياً جداً أمام الأستاذة، لاحظت أن الملزمة التي أرسلتِها تحتوي على أشياء قوية جداً لم نضفها للواجهة بعد، وهي:
-1. **رسم السطح ثلاثي الأبعاد (3D Control Surface).**
-2. **مقارنة طرق فك الضبابية (Defuzzification Methods) مثل centroid و bisector وغيرها.**
-
-لقد قمت بتطوير الواجهة باستخدام **نظام التبويبات (Tabs)** في Streamlit، بحيث يكون المشروع منظماً كبرنامج حقيقي:
-* **التبويب الأول:** واجهة الغسالة التفاعلية.
-* **التبويب الثاني:** الرسم البياني ثلاثي الأبعاد (مأخوذ من كود الأستاذة).
-* **التبويب الثالث:** مقارنة طرق حساب النتيجة (Defuzzification).
-* **التبويب الرابع:** القواعد الـ 27.
-
-الملف الأول `design.html` يبقى كما هو دون تغيير. 
-انسخي هذا الكود المطور واستبدلي به محتوى **`app.py`**:
-
-```python
-import streamlit as st
-import numpy as np
-import skfuzzy as fuzz
-from skfuzzy import control as ctrl
 import matplotlib.pyplot as plt
 import time
 
 st.set_page_config(page_title="Fuzzy Washing Machine", layout="wide")
 st.title("🧺 Smart Washing Machine (Fuzzy Logic Controller)")
 
-# ==========================================
 # 1. VARIABLES & MEMBERSHIP FUNCTIONS
-# ==========================================
 dirtiness = ctrl.Antecedent(np.arange(0, 101, 1), "dirtiness")
 grease = ctrl.Antecedent(np.arange(0, 101, 1), "grease")
 load = ctrl.Antecedent(np.arange(0, 10.1, 0.1), "load")
@@ -138,11 +36,8 @@ water_temp["cold"] = fuzz.trimf(water_temp.universe, [0, 0, 40])
 water_temp["warm"] = fuzz.trimf(water_temp.universe, [30, 50, 70])
 water_temp["hot"] = fuzz.trimf(water_temp.universe, [60, 100, 100])
 
-# ==========================================
 # 2. RULE BASE (27 RULES)
-# ==========================================
 rules = [
-    # Group 1: Light Load
     ctrl.Rule(dirtiness['low'] & grease['low'] & load['light'], [wash_time['short'], water_temp['cold']]),
     ctrl.Rule(dirtiness['low'] & grease['medium'] & load['light'], [wash_time['short'], water_temp['warm']]),
     ctrl.Rule(dirtiness['low'] & grease['high'] & load['light'], [wash_time['normal'], water_temp['warm']]),
@@ -153,7 +48,6 @@ rules = [
     ctrl.Rule(dirtiness['high'] & grease['medium'] & load['light'], [wash_time['long'], water_temp['hot']]),
     ctrl.Rule(dirtiness['high'] & grease['high'] & load['light'], [wash_time['long'], water_temp['hot']]),
 
-    # Group 2: Medium Load
     ctrl.Rule(dirtiness['low'] & grease['low'] & load['medium'], [wash_time['short'], water_temp['cold']]),
     ctrl.Rule(dirtiness['low'] & grease['medium'] & load['medium'], [wash_time['normal'], water_temp['warm']]),
     ctrl.Rule(dirtiness['low'] & grease['high'] & load['medium'], [wash_time['long'], water_temp['warm']]),
@@ -164,7 +58,6 @@ rules = [
     ctrl.Rule(dirtiness['high'] & grease['medium'] & load['medium'], [wash_time['long'], water_temp['hot']]),
     ctrl.Rule(dirtiness['high'] & grease['high'] & load['medium'], [wash_time['long'], water_temp['hot']]),
 
-    # Group 3: Heavy Load
     ctrl.Rule(dirtiness['low'] & grease['low'] & load['heavy'], [wash_time['normal'], water_temp['cold']]),
     ctrl.Rule(dirtiness['low'] & grease['medium'] & load['heavy'], [wash_time['long'], water_temp['warm']]),
     ctrl.Rule(dirtiness['low'] & grease['high'] & load['heavy'], [wash_time['long'], water_temp['hot']]),
@@ -178,9 +71,7 @@ rules = [
 
 washer_ctrl = ctrl.ControlSystem(rules)
 
-# ==========================================
 # 3. USER INPUTS
-# ==========================================
 st.markdown("### 🎛️ Controller Inputs")
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -192,12 +83,9 @@ with col3:
 
 calculate_btn = st.button('🚀 Calculate & Start Washing', use_container_width=True)
 
-# ==========================================
 # 4. TABS UI
-# ==========================================
 tab1, tab2, tab3, tab4 = st.tabs(["🧺 Simulator", "📊 3D Surface", "⚙️ Defuzzification", "📄 Rules Base"])
 
-# --- TAB 1: Simulator ---
 with tab1:
     sim = ctrl.ControlSystemSimulation(washer_ctrl)
     
@@ -264,11 +152,9 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-# --- TAB 2: 3D Control Surface ---
 with tab2:
     st.markdown("### 3D Control Surface (Dirtiness vs Load)")
-    st.write(f"*Note: Grease is currently fixed at your input ({g_input}%) for this 3D plot.*")
-    if st.button("Plot 3D Surface (Takes a few seconds)"):
+    if st.button("Plot 3D Surface"):
         d_grid = np.linspace(0, 100, 21)
         l_grid = np.linspace(0, 10, 21)
         Z = np.zeros((len(l_grid), len(d_grid)))
@@ -292,10 +178,8 @@ with tab2:
         ax.set_title("Washing-machine fuzzy controller")
         st.pyplot(fig)
 
-# --- TAB 3: Defuzzification Comparison ---
 with tab3:
     st.markdown("### ⚙️ Compare Defuzzification Methods")
-    st.write(f"Calculating for current inputs -> **Dirt:** {d_input} | **Grease:** {g_input} | **Load:** {l_input}")
     
     methods = ["centroid", "bisector", "mom", "som", "lom"]
     results = {}
@@ -309,13 +193,12 @@ with tab3:
         sim_defuz.compute()
         results[method] = sim_defuz.output['wash_time']
         
-    wash_time.defuzzify_method = "centroid" # restore default
+    wash_time.defuzzify_method = "centroid" 
     
     m_cols = st.columns(len(methods))
     for col, method in zip(m_cols, methods):
         col.metric(label=method.capitalize(), value=f"{results[method]:.1f} min")
 
-# --- TAB 4: Rules ---
 with tab4:
     st.markdown("""
     ### 📄 Full 27 Mamdani Rules Matrix
@@ -330,5 +213,5 @@ with tab4:
       - IF dirtiness is high AND grease is medium AND load is light THEN wash_time is long AND water_temp is hot
       - IF dirtiness is high AND grease is high AND load is light THEN wash_time is long AND water_temp is hot
     
-    *(Repeated similarly for Medium and Heavy loads based on standard matrices)*
+    *(Repeated similarly for Medium and Heavy loads)*
     """)
