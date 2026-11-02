@@ -13,7 +13,6 @@ weight = ctrl.Antecedent(np.arange(0, 11, 1), 'weight')
 wash_time = ctrl.Consequent(np.arange(0, 101, 1), 'wash_time') 
 water_temp = ctrl.Consequent(np.arange(0, 101, 1), 'water_temp')
 
-# دوال العضوية المثلثية المتناظرة (تحسب بدقة ودون أخطاء)
 dirt['low'] = fuzz.trimf(dirt.universe, [0, 0, 50])
 dirt['medium'] = fuzz.trimf(dirt.universe, [0, 50, 100])
 dirt['high'] = fuzz.trimf(dirt.universe, [50, 100, 100])
@@ -37,7 +36,7 @@ water_temp['warm'] = fuzz.trimf(water_temp.universe, [0, 50, 100])
 water_temp['hot'] = fuzz.trimf(water_temp.universe, [50, 100, 100])
 
 # ==========================================
-# 2. مصفوفة القواعد الـ 27 (Mamdani Inference Matrix)
+# 2. مصفوفة القواعد الـ 27 (Mamdani Matrix)
 # ==========================================
 rules = [
     # Group 1: Light Weight
@@ -78,7 +77,7 @@ washing_ctrl = ctrl.ControlSystem(rules)
 washing_sim = ctrl.ControlSystemSimulation(washing_ctrl)
 
 # ==========================================
-# 3. استدعاء ملف الـ HTML
+# 3. تحميل تصميم الـ HTML
 # ==========================================
 try:
     with open("design.html", "r", encoding="utf-8") as f:
@@ -87,7 +86,7 @@ except FileNotFoundError:
     pass
 
 # ==========================================
-# 4. واجهة أدوات الإدخال (المقاييس)
+# 4. أدوات الإدخال (Sliders)
 # ==========================================
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -99,44 +98,50 @@ with col3:
 
 calculate_btn = st.button('🚀 Calculate Outputs & Start Washing')
 
-# صورة الغسالة
-image_url = "https://cdn-icons-png.flaticon.com/512/872/872221.png"
+# ==========================================
+# 5. عرض شكل الغسالة التفاعلية
+# ==========================================
+is_spinning = "spinning" if calculate_btn else ""
+status_title = "🧼 Washing in Progress..." if calculate_btn else "🧺 Smart Washing Machine Simulator"
+status_sub = "Door Closed - Washing & Calculating Outputs" if calculate_btn else "Door Open - Set values and click Calculate"
+
+st.markdown(f"""
+<div class="washer-container {is_spinning}">
+    <div class="washing-machine">
+        <div class="controls-panel">
+            <div class="dispenser"></div>
+            <div class="knobs">
+                <div class="knob"></div>
+                <div class="knob"></div>
+            </div>
+        </div>
+        <div class="drum-outer">
+            <div class="drum-inner">
+                <div class="clothes"></div>
+            </div>
+            <div class="door-open"></div>
+        </div>
+    </div>
+    <div class="title-text">{status_title}</div>
+    <div class="subtitle-text">{status_sub}</div>
+</div>
+""", unsafe_allow_html=True)
 
 # ==========================================
-# 5. منطق التشغيل والعرض
+# 6. إجراء الحسابات وعرض النتائج
 # ==========================================
 if calculate_btn:
-    # الغسالة تتحرك عند الضغط
-    st.markdown(f"""
-    <div class="washer-card">
-        <div class="washer-title">🧼 Washing in Progress...</div>
-        <div class="washer-subtitle">Calculating Fuzzy Logic Outputs (Mamdani 27 Rules)</div>
-        <img class="animated-washer-img" src="{image_url}" alt="Washing Machine">
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # إجراء حسابات المنطق الضبابي
     washing_sim.input['dirt'] = dirt_input
     washing_sim.input['grease'] = grease_input
     washing_sim.input['weight'] = weight_input
     washing_sim.compute()
     
-    # عرض المخرجات
     st.subheader("Calculated Outputs:")
     st.success(f"⏱️ Wash Time: {washing_sim.output['wash_time']:.1f} minutes")
     st.info(f"🌡️ Water Temperature: {washing_sim.output['water_temp']:.1f} °C")
-else:
-    # الغسالة ثابتة في الحالة الطبيعية
-    st.markdown(f"""
-    <div class="washer-card">
-        <div class="washer-title">🧺 Smart Washing Machine Simulator</div>
-        <div class="washer-subtitle">Ready - Set values and click Calculate</div>
-        <img class="static-washer-img" src="{image_url}" alt="Washing Machine">
-    </div>
-    """, unsafe_allow_html=True)
 
 # ==========================================
-# 6. عرض القواعد الـ 27 الأكاديمية
+# 7. عرض القواعد الـ 27
 # ==========================================
 with st.expander("📄 View All 27 Fuzzy Logic Rules (Full Matrix)"):
     st.markdown("""
