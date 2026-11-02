@@ -2,6 +2,11 @@ import streamlit as st
 import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
+import streamlit as st
+
+# قراءة واجهة الـ HTML المتحركة من الملف المنفصل
+with open("design.html", "r", encoding="utf-8") as f:
+    st.markdown(f.read(), unsafe_allow_html=True)
 
 # 1. UI TITLE & DESCRIPTION
 st.title("🚿 Advanced Smart Washing Machine")
