@@ -16,7 +16,6 @@
 .washing-machine {
     width: 200px;
     height: 240px;
-    background: #e1b12c;
     background: linear-gradient(135deg, #f5f6fa 0%, #dcdde1 100%);
     border: 5px solid #2f3640;
     border-radius: 25px;
@@ -24,7 +23,7 @@
     box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
 }
 
-/* لوحة التحكم العلوية (الأزرار والشاشة) */
+/* لوحة التحكم العلوية */
 .controls-panel {
     width: 100%;
     height: 45px;
@@ -95,7 +94,7 @@
     box-shadow: -15px -5px 0 #00b894;
 }
 
-/* الباب الزجاجي المفتوح في الحالة العادية */
+/* الباب الزجاجي */
 .door-open {
     width: 120px;
     height: 120px;
@@ -106,23 +105,23 @@
     top: 5px;
     transform: rotateY(50deg);
     box-shadow: -5px 0 10px rgba(0,0,0,0.2);
+    transition: all 0.5s ease;
     pointer-events: none;
 }
 
-/* حركة دوران الملابس أثناء الغسيل */
+/* حركة الدوران المحددة بوقت (تتوقف تلقائياً) */
 @keyframes wash-spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
 .spinning .drum-inner {
-    animation: wash-spin 0.8s infinite linear;
+    animation: wash-spin 0.6s ease-in-out 4; /* تدور 4 مرات ثم تتوقف */
 }
 
 .spinning .door-open {
     transform: rotateY(0deg);
     left: 0px;
-    transition: all 0.5s ease;
 }
 
 /* عناوين الواجهة */
