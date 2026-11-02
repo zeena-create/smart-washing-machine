@@ -2,18 +2,10 @@ import streamlit as st
 import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
-import streamlit as st
 
-# قراءة واجهة الـ HTML المتحركة من الملف المنفصل
-with open("design.html", "r", encoding="utf-8") as f:
-    st.markdown(f.read(), unsafe_allow_html=True)
-
-# 1. UI TITLE & DESCRIPTION
-st.title("🚿 Advanced Smart Washing Machine")
-st.write("Fuzzy Logic System with 3 Inputs (Dirt, Grease, Weight) and 27 IF-THEN Rules.")
-st.divider()
-
-# 2. FUZZY VARIABLES SETUP
+# ==========================================
+# 1. إعداد المتغيرات الضبابية (3 Inputs, 2 Outputs)
+# ==========================================
 dirt = ctrl.Antecedent(np.arange(0, 101, 1), 'dirt')          
 grease = ctrl.Antecedent(np.arange(0, 101, 1), 'grease')      
 weight = ctrl.Antecedent(np.arange(0, 11, 1), 'weight')       
@@ -21,6 +13,7 @@ weight = ctrl.Antecedent(np.arange(0, 11, 1), 'weight')
 wash_time = ctrl.Consequent(np.arange(0, 101, 1), 'wash_time') 
 water_temp = ctrl.Consequent(np.arange(0, 101, 1), 'water_temp')
 
+# دوال العضوية المثلثية المتناظرة (تحسب بدقة ودون أخطاء)
 dirt['low'] = fuzz.trimf(dirt.universe, [0, 0, 50])
 dirt['medium'] = fuzz.trimf(dirt.universe, [0, 50, 100])
 dirt['high'] = fuzz.trimf(dirt.universe, [50, 100, 100])
@@ -43,7 +36,9 @@ water_temp['cold'] = fuzz.trimf(water_temp.universe, [0, 0, 50])
 water_temp['warm'] = fuzz.trimf(water_temp.universe, [0, 50, 100])
 water_temp['hot'] = fuzz.trimf(water_temp.universe, [50, 100, 100])
 
-# 3. RULE BASE (27 RULES)
+# ==========================================
+# 2. مصفوفة القواعد الـ 27 (Mamdani Inference Matrix)
+# ==========================================
 rules = [
     # Group 1: Light Weight
     ctrl.Rule(dirt['low'] & grease['low'] & weight['light'], [wash_time['very_short'], water_temp['cold']]),
@@ -82,7 +77,67 @@ rules = [
 washing_ctrl = ctrl.ControlSystem(rules)
 washing_sim = ctrl.ControlSystemSimulation(washing_ctrl)
 
-# 4. FULL 27 RULE BASE DISPLAY 
+# ==========================================
+# 3. استدعاء ملف الـ HTML
+# ==========================================
+try:
+    with open("design.html", "r", encoding="utf-8") as f:
+        st.markdown(f.read(), unsafe_allow_html=True)
+except FileNotFoundError:
+    pass
+
+# ==========================================
+# 4. واجهة أدوات الإدخال (المقاييس)
+# ==========================================
+col1, col2, col3 = st.columns(3)
+with col1:
+    dirt_input = st.slider('Dirt Level (%)', min_value=0, max_value=100, value=50, step=1)
+with col2:
+    grease_input = st.slider('Grease Level (%)', min_value=0, max_value=100, value=50, step=1)
+with col3:
+    weight_input = st.slider('Load Weight (Kg)', min_value=0, max_value=10, value=5, step=1)
+
+calculate_btn = st.button('🚀 Calculate Outputs & Start Washing')
+
+# صورة الغسالة
+image_url = "https://cdn-icons-png.flaticon.com/512/872/872221.png"
+
+# ==========================================
+# 5. منطق التشغيل والعرض
+# ==========================================
+if calculate_btn:
+    # الغسالة تتحرك عند الضغط
+    st.markdown(f"""
+    <div class="washer-card">
+        <div class="washer-title">🧼 Washing in Progress...</div>
+        <div class="washer-subtitle">Calculating Fuzzy Logic Outputs (Mamdani 27 Rules)</div>
+        <img class="animated-washer-img" src="{image_url}" alt="Washing Machine">
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # إجراء حسابات المنطق الضبابي
+    washing_sim.input['dirt'] = dirt_input
+    washing_sim.input['grease'] = grease_input
+    washing_sim.input['weight'] = weight_input
+    washing_sim.compute()
+    
+    # عرض المخرجات
+    st.subheader("Calculated Outputs:")
+    st.success(f"⏱️ Wash Time: {washing_sim.output['wash_time']:.1f} minutes")
+    st.info(f"🌡️ Water Temperature: {washing_sim.output['water_temp']:.1f} °C")
+else:
+    # الغسالة ثابتة في الحالة الطبيعية
+    st.markdown(f"""
+    <div class="washer-card">
+        <div class="washer-title">🧺 Smart Washing Machine Simulator</div>
+        <div class="washer-subtitle">Ready - Set values and click Calculate</div>
+        <img class="static-washer-img" src="{image_url}" alt="Washing Machine">
+    </div>
+    """, unsafe_allow_html=True)
+
+# ==========================================
+# 6. عرض القواعد الـ 27 الأكاديمية
+# ==========================================
 with st.expander("📄 View All 27 Fuzzy Logic Rules (Full Matrix)"):
     st.markdown("""
     **🟢 Group 1: Light Weight (الملابس الخفيفة)**
@@ -118,22 +173,3 @@ with st.expander("📄 View All 27 Fuzzy Logic Rules (Full Matrix)"):
     26. IF Dirt is High AND Grease is Med AND Weight is Heavy THEN Time is Very Long AND Temp is Hot
     27. IF Dirt is High AND Grease is High AND Weight is Heavy THEN Time is Very Long AND Temp is Hot
     """)
-
-# 5. USER INPUTS & CALCULATION
-col1, col2, col3 = st.columns(3)
-with col1:
-    dirt_input = st.slider('Dirt Level (%)', 0, 100, 50)
-with col2:
-    grease_input = st.slider('Grease Level (%)', 0, 100, 50)
-with col3:
-    weight_input = st.slider('Load Weight (Kg)', 0, 10, 5)
-
-if st.button('Calculate Outputs'):
-    washing_sim.input['dirt'] = dirt_input
-    washing_sim.input['grease'] = grease_input
-    washing_sim.input['weight'] = weight_input
-    washing_sim.compute()
-    
-    st.subheader("Calculated Outputs:")
-    st.success(f"⏱️ Wash Time: {washing_sim.output['wash_time']:.1f} minutes")
-    st.info(f"🌡️ Water Temperature: {washing_sim.output['water_temp']:.1f} °C")
