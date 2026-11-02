@@ -3,87 +3,132 @@ import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 
-# ==========================================
-# 1. UI TITLE & DESCRIPTION / عنوان الواجهة
-# ==========================================
-st.title("🚿 Smart Washing Machine (Fuzzy Logic)")
-st.write("Mamdani Fuzzy Logic Inference System with 9 IF-THEN Rules for Wash Time & Water Temperature Control.")
+# 1. UI TITLE & DESCRIPTION
+st.title("🚿 Advanced Smart Washing Machine")
+st.write("Fuzzy Logic System with 3 Inputs (Dirt, Grease, Weight) and 27 IF-THEN Rules.")
 st.divider()
 
-# ==========================================
-# 2. FUZZY VARIABLES SETUP / إعداد المتغيرات الضبابية
-# ==========================================
-# Antecedents (Inputs / المدخلات)
-dirt = ctrl.Antecedent(np.arange(0, 101, 1), 'dirt')
-grease = ctrl.Antecedent(np.arange(0, 101, 1), 'grease')
+# 2. FUZZY VARIABLES SETUP
+dirt = ctrl.Antecedent(np.arange(0, 101, 1), 'dirt')          
+grease = ctrl.Antecedent(np.arange(0, 101, 1), 'grease')      
+weight = ctrl.Antecedent(np.arange(0, 11, 1), 'weight')       
 
-# Consequents (Outputs / المخرجات)
-wash_time = ctrl.Consequent(np.arange(0, 61, 1), 'wash_time')
+wash_time = ctrl.Consequent(np.arange(0, 101, 1), 'wash_time') 
 water_temp = ctrl.Consequent(np.arange(0, 101, 1), 'water_temp')
 
-# Membership Functions / تعريف دوال العضوية
-dirt.automf(names=['low', 'medium', 'high'])
-grease.automf(names=['low', 'medium', 'high'])
-wash_time.automf(names=['very_short', 'short', 'medium', 'long', 'very_long'])
-water_temp.automf(names=['cold', 'warm', 'hot'])
+dirt['low'] = fuzz.trimf(dirt.universe, [0, 0, 50])
+dirt['medium'] = fuzz.trimf(dirt.universe, [0, 50, 100])
+dirt['high'] = fuzz.trimf(dirt.universe, [50, 100, 100])
 
-# ==========================================
-# 3. RULE BASE (9 RULES) / مصفوفة القواعد التسع
-# ==========================================
-# NOTE / ملاحظة:
-# ENG: Full 3x3 matrix covering all combinations of Dirt and Grease.
-# AR: مصفوفة كاملة 3x3 تغطي جميع احتمالات الأوساخ والدهون.
+grease['low'] = fuzz.trimf(grease.universe, [0, 0, 50])
+grease['medium'] = fuzz.trimf(grease.universe, [0, 50, 100])
+grease['high'] = fuzz.trimf(grease.universe, [50, 100, 100])
 
-rule1 = ctrl.Rule(dirt['low'] & grease['low'], (wash_time['very_short'], water_temp['cold']))
-rule2 = ctrl.Rule(dirt['low'] & grease['medium'], (wash_time['short'], water_temp['warm']))
-rule3 = ctrl.Rule(dirt['low'] & grease['high'], (wash_time['medium'], water_temp['warm']))
+weight['light'] = fuzz.trimf(weight.universe, [0, 0, 5])
+weight['medium'] = fuzz.trimf(weight.universe, [0, 5, 10])
+weight['heavy'] = fuzz.trimf(weight.universe, [5, 10, 10])
 
-rule4 = ctrl.Rule(dirt['medium'] & grease['low'], (wash_time['short'], water_temp['warm']))
-rule5 = ctrl.Rule(dirt['medium'] & grease['medium'], (wash_time['medium'], water_temp['warm']))
-rule6 = ctrl.Rule(dirt['medium'] & grease['high'], (wash_time['long'], water_temp['hot']))
+wash_time['very_short'] = fuzz.trimf(wash_time.universe, [0, 0, 25])
+wash_time['short'] = fuzz.trimf(wash_time.universe, [0, 25, 50])
+wash_time['medium'] = fuzz.trimf(wash_time.universe, [25, 50, 75])
+wash_time['long'] = fuzz.trimf(wash_time.universe, [50, 75, 100])
+wash_time['very_long'] = fuzz.trimf(wash_time.universe, [75, 100, 100])
 
-rule7 = ctrl.Rule(dirt['high'] & grease['low'], (wash_time['medium'], water_temp['warm']))
-rule8 = ctrl.Rule(dirt['high'] & grease['medium'], (wash_time['long'], water_temp['hot']))
-rule9 = ctrl.Rule(dirt['high'] & grease['high'], (wash_time['very_long'], water_temp['hot']))
+water_temp['cold'] = fuzz.trimf(water_temp.universe, [0, 0, 50])
+water_temp['warm'] = fuzz.trimf(water_temp.universe, [0, 50, 100])
+water_temp['hot'] = fuzz.trimf(water_temp.universe, [50, 100, 100])
 
-# Control System Setup / إنشاء نظام التحكم
-washing_ctrl = ctrl.ControlSystem([rule1, rule2, rule3, rule4, rule5, rule6, rule7, rule8, rule9])
+# 3. RULE BASE (27 RULES)
+rules = [
+    # Group 1: Light Weight
+    ctrl.Rule(dirt['low'] & grease['low'] & weight['light'], [wash_time['very_short'], water_temp['cold']]),
+    ctrl.Rule(dirt['low'] & grease['medium'] & weight['light'], [wash_time['short'], water_temp['warm']]),
+    ctrl.Rule(dirt['low'] & grease['high'] & weight['light'], [wash_time['medium'], water_temp['warm']]),
+    ctrl.Rule(dirt['medium'] & grease['low'] & weight['light'], [wash_time['short'], water_temp['warm']]),
+    ctrl.Rule(dirt['medium'] & grease['medium'] & weight['light'], [wash_time['medium'], water_temp['warm']]),
+    ctrl.Rule(dirt['medium'] & grease['high'] & weight['light'], [wash_time['long'], water_temp['hot']]),
+    ctrl.Rule(dirt['high'] & grease['low'] & weight['light'], [wash_time['medium'], water_temp['warm']]),
+    ctrl.Rule(dirt['high'] & grease['medium'] & weight['light'], [wash_time['long'], water_temp['hot']]),
+    ctrl.Rule(dirt['high'] & grease['high'] & weight['light'], [wash_time['long'], water_temp['hot']]),
+
+    # Group 2: Medium Weight
+    ctrl.Rule(dirt['low'] & grease['low'] & weight['medium'], [wash_time['short'], water_temp['cold']]),
+    ctrl.Rule(dirt['low'] & grease['medium'] & weight['medium'], [wash_time['medium'], water_temp['warm']]),
+    ctrl.Rule(dirt['low'] & grease['high'] & weight['medium'], [wash_time['long'], water_temp['warm']]),
+    ctrl.Rule(dirt['medium'] & grease['low'] & weight['medium'], [wash_time['medium'], water_temp['warm']]),
+    ctrl.Rule(dirt['medium'] & grease['medium'] & weight['medium'], [wash_time['long'], water_temp['warm']]),
+    ctrl.Rule(dirt['medium'] & grease['high'] & weight['medium'], [wash_time['very_long'], water_temp['hot']]),
+    ctrl.Rule(dirt['high'] & grease['low'] & weight['medium'], [wash_time['long'], water_temp['warm']]),
+    ctrl.Rule(dirt['high'] & grease['medium'] & weight['medium'], [wash_time['very_long'], water_temp['hot']]),
+    ctrl.Rule(dirt['high'] & grease['high'] & weight['medium'], [wash_time['very_long'], water_temp['hot']]),
+
+    # Group 3: Heavy Weight
+    ctrl.Rule(dirt['low'] & grease['low'] & weight['heavy'], [wash_time['medium'], water_temp['cold']]),
+    ctrl.Rule(dirt['low'] & grease['medium'] & weight['heavy'], [wash_time['long'], water_temp['warm']]),
+    ctrl.Rule(dirt['low'] & grease['high'] & weight['heavy'], [wash_time['very_long'], water_temp['hot']]),
+    ctrl.Rule(dirt['medium'] & grease['low'] & weight['heavy'], [wash_time['long'], water_temp['warm']]),
+    ctrl.Rule(dirt['medium'] & grease['medium'] & weight['heavy'], [wash_time['very_long'], water_temp['hot']]),
+    ctrl.Rule(dirt['medium'] & grease['high'] & weight['heavy'], [wash_time['very_long'], water_temp['hot']]),
+    ctrl.Rule(dirt['high'] & grease['low'] & weight['heavy'], [wash_time['very_long'], water_temp['hot']]),
+    ctrl.Rule(dirt['high'] & grease['medium'] & weight['heavy'], [wash_time['very_long'], water_temp['hot']]),
+    ctrl.Rule(dirt['high'] & grease['high'] & weight['heavy'], [wash_time['very_long'], water_temp['hot']])
+]
+
+washing_ctrl = ctrl.ControlSystem(rules)
 washing_sim = ctrl.ControlSystemSimulation(washing_ctrl)
 
-# ==========================================
-# 4. RULE BASE DISPLAY / عرض القواعد للمناقشة
-# ==========================================
-with st.expander("📄 View Fuzzy Logic Rules (IF-THEN Rules)"):
+# 4. FULL 27 RULE BASE DISPLAY 
+with st.expander("📄 View All 27 Fuzzy Logic Rules (Full Matrix)"):
     st.markdown("""
-    1. **IF** Dirt is Low **AND** Grease is Low **THEN** Time is Very Short **AND** Temp is Cold
-    2. **IF** Dirt is Low **AND** Grease is Medium **THEN** Time is Short **AND** Temp is Warm
-    3. **IF** Dirt is Low **AND** Grease is High **THEN** Time is Medium **AND** Temp is Warm
-    4. **IF** Dirt is Medium **AND** Grease is Low **THEN** Time is Short **AND** Temp is Warm
-    5. **IF** Dirt is Medium **AND** Grease is Medium **THEN** Time is Medium **AND** Temp is Warm
-    6. **IF** Dirt is Medium **AND** Grease is High **THEN** Time is Long **AND** Temp is Hot
-    7. **IF** Dirt is High **AND** Grease is Low **THEN** Time is Medium **AND** Temp is Warm
-    8. **IF** Dirt is High **AND** Grease is Medium **THEN** Time is Long **AND** Temp is Hot
-    9. **IF** Dirt is High **AND** Grease is High **THEN** Time is Very Long **AND** Temp is Hot
+    **🟢 Group 1: Light Weight (الملابس الخفيفة)**
+    1. IF Dirt is Low AND Grease is Low AND Weight is Light THEN Time is Very Short AND Temp is Cold
+    2. IF Dirt is Low AND Grease is Med AND Weight is Light THEN Time is Short AND Temp is Warm
+    3. IF Dirt is Low AND Grease is High AND Weight is Light THEN Time is Medium AND Temp is Warm
+    4. IF Dirt is Med AND Grease is Low AND Weight is Light THEN Time is Short AND Temp is Warm
+    5. IF Dirt is Med AND Grease is Med AND Weight is Light THEN Time is Medium AND Temp is Warm
+    6. IF Dirt is Med AND Grease is High AND Weight is Light THEN Time is Long AND Temp is Hot
+    7. IF Dirt is High AND Grease is Low AND Weight is Light THEN Time is Medium AND Temp is Warm
+    8. IF Dirt is High AND Grease is Med AND Weight is Light THEN Time is Long AND Temp is Hot
+    9. IF Dirt is High AND Grease is High AND Weight is Light THEN Time is Long AND Temp is Hot
+
+    **🟡 Group 2: Medium Weight (الملابس المتوسطة)**
+    10. IF Dirt is Low AND Grease is Low AND Weight is Medium THEN Time is Short AND Temp is Cold
+    11. IF Dirt is Low AND Grease is Med AND Weight is Medium THEN Time is Medium AND Temp is Warm
+    12. IF Dirt is Low AND Grease is High AND Weight is Medium THEN Time is Long AND Temp is Warm
+    13. IF Dirt is Med AND Grease is Low AND Weight is Medium THEN Time is Medium AND Temp is Warm
+    14. IF Dirt is Med AND Grease is Med AND Weight is Medium THEN Time is Long AND Temp is Warm
+    15. IF Dirt is Med AND Grease is High AND Weight is Medium THEN Time is Very Long AND Temp is Hot
+    16. IF Dirt is High AND Grease is Low AND Weight is Medium THEN Time is Long AND Temp is Warm
+    17. IF Dirt is High AND Grease is Med AND Weight is Medium THEN Time is Very Long AND Temp is Hot
+    18. IF Dirt is High AND Grease is High AND Weight is Medium THEN Time is Very Long AND Temp is Hot
+
+    **🔴 Group 3: Heavy Weight (الملابس الثقيلة)**
+    19. IF Dirt is Low AND Grease is Low AND Weight is Heavy THEN Time is Medium AND Temp is Cold
+    20. IF Dirt is Low AND Grease is Med AND Weight is Heavy THEN Time is Long AND Temp is Warm
+    21. IF Dirt is Low AND Grease is High AND Weight is Heavy THEN Time is Very Long AND Temp is Hot
+    22. IF Dirt is Med AND Grease is Low AND Weight is Heavy THEN Time is Long AND Temp is Warm
+    23. IF Dirt is Med AND Grease is Med AND Weight is Heavy THEN Time is Very Long AND Temp is Hot
+    24. IF Dirt is Med AND Grease is High AND Weight is Heavy THEN Time is Very Long AND Temp is Hot
+    25. IF Dirt is High AND Grease is Low AND Weight is Heavy THEN Time is Very Long AND Temp is Hot
+    26. IF Dirt is High AND Grease is Med AND Weight is Heavy THEN Time is Very Long AND Temp is Hot
+    27. IF Dirt is High AND Grease is High AND Weight is Heavy THEN Time is Very Long AND Temp is Hot
     """)
 
-# ==========================================
-# 5. USER INPUTS & CALCULATION / أدوات الإدخال والنتائج
-# ==========================================
-col1, col2 = st.columns(2)
+# 5. USER INPUTS & CALCULATION
+col1, col2, col3 = st.columns(3)
 with col1:
     dirt_input = st.slider('Dirt Level (%)', 0, 100, 50)
 with col2:
-    grease_input = st.slider('Grease / Fabric Level (%)', 0, 100, 50)
+    grease_input = st.slider('Grease Level (%)', 0, 100, 50)
+with col3:
+    weight_input = st.slider('Load Weight (Kg)', 0, 10, 5)
 
 if st.button('Calculate Outputs'):
-    # NOTE / ملاحظة:
-    # ENG: Fuzzification & Inference process takes place here.
-    # AR: هنا تتم عملية تحويل المدخلات وحساب النتائج عبر القواعد.
     washing_sim.input['dirt'] = dirt_input
     washing_sim.input['grease'] = grease_input
+    washing_sim.input['weight'] = weight_input
     washing_sim.compute()
     
     st.subheader("Calculated Outputs:")
     st.success(f"⏱️ Wash Time: {washing_sim.output['wash_time']:.1f} minutes")
     st.info(f"🌡️ Water Temperature: {washing_sim.output['water_temp']:.1f} °C")
-
