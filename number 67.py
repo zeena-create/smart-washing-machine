@@ -70,7 +70,7 @@ rules = [
     ctrl.Rule(dirtiness['low'] & grease['medium'] & load['medium'], [wash_time['normal'], water_temp['warm']]),
     ctrl.Rule(dirtiness['low'] & grease['high'] & load['medium'], [wash_time['long'], water_temp['warm']]),
     ctrl.Rule(dirtiness['medium'] & grease['low'] & load['medium'], [wash_time['normal'], water_temp['warm']]),
-ctrl.Rule(dirtiness['medium'] & grease['medium'] & load['medium'], [wash_time['normal'], water_temp['warm']]),
+    ctrl.Rule(dirtiness['medium'] & grease['medium'] & load['medium'], [wash_time['normal'], water_temp['warm']]),
     ctrl.Rule(dirtiness['medium'] & grease['high'] & load['medium'], [wash_time['long'], water_temp['hot']]),
     ctrl.Rule(dirtiness['high'] & grease['low'] & load['medium'], [wash_time['long'], water_temp['warm']]),
     ctrl.Rule(dirtiness['high'] & grease['medium'] & load['medium'], [wash_time['long'], water_temp['hot']]),
@@ -150,7 +150,7 @@ with tab2:
         ax.legend()
         ax.grid(True, alpha=0.3)
         return fig
-c1, c2 = st.columns(2)
+    c1, c2 = st.columns(2)
     with c1:
         st.pyplot(plot_mf(np.arange(0, 101, 1), {'low':[0,0,50], 'medium':[25,50,75], 'high':[50,100,100]}, "Dirtiness", "%"))
         st.pyplot(plot_mf(np.arange(0, 10.1, 0.1), {'light':[0,0,5], 'medium':[2,5,8], 'heavy':[5,10,10]}, "Load", "kg"))
